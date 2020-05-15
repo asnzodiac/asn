@@ -15,11 +15,11 @@ Phishing Tool for Instagram, Facebook, Twitter, Snapchat, Github, Yahoo, Protonm
 Usage of asn phishing for attacking targets without prior mutual consent is illegal. It's the end user's responsibility to obey all applicable local, state and federal laws. Developers assume no liability and are not responsible for any misuse or damage caused by this program 
 ![asn phishing](https://user-images.githubusercontent.com/50163512/82005846-13c8d600-9684-11ea-877d-02d00590d4c2.png)
 
-
 ### Usage:
 ```
 git clone https://github.com/asnzodiac/asn
 cd asn
+chmod +x *
 bash asn.sh
 ```
 
