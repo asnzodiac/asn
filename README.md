@@ -13,7 +13,7 @@ Phishing Tool for Instagram, Facebook, Twitter, Snapchat, Github, Yahoo, Protonm
 ## Legal disclaimer:
 
 Usage of asn phishing for attacking targets without prior mutual consent is illegal. It's the end user's responsibility to obey all applicable local, state and federal laws. Developers assume no liability and are not responsible for any misuse or damage caused by this program 
-![AsnPhishing](https://user-images.githubusercontent.com/50163512/82006835-58557100-9686-11ea-83e0-e9e29bffe2ec.png)
+![asn phishing1](https://user-images.githubusercontent.com/50163512/82007146-2264bc80-9687-11ea-8c00-92606001bb71.png)
 
 
 ### Usage:
