@@ -28,6 +28,5 @@ bash asn.sh
 ### Donate!
 Support the authors:
 ### GPay:
-+918589023699
 ### LiberaPay:
 <noscript><a href="https://liberapay.com/thelinuxchoice/donate"><img alt="Donate using Liberapay" src="https://liberapay.com/assets/widgets/donate.svg"></a></noscript>
