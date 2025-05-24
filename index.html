@@ -315,29 +315,6 @@
           // Determine if flight is delayed or completed
           const isDelayed = sch && now > sch && (!act || act > now) && (!est || est > now);
           const isCompleted = act && act <= now;
-
-                    // Flight completed within the last hour
-          if (act && act > now - oneHourInSeconds) {
-            return true;
-          }
-        }
-        return false;
-      }).sort((a, b) => {
-        const getTime = (flight, key) => flight.flight.time[key]?.[type === "departures" ? "departure" : "arrival"] || 0;
-        const aSch = getTime(a, sortOption === "estimated" ? "estimated" : "scheduled");
-        const bSch = getTime(b, sortOption === "estimated" ? "estimated" : "scheduled");
-
-        if (sortOption === "delayed") {
-          const aDelay = (a.flight.time.estimated?.[type === "departures" ? "departure" : "arrival"] || 0) -
-                         (a.flight.time.scheduled?.[type === "departures" ? "departure" : "arrival"] || 0);
-          const bDelay = (b.flight.time.estimated?.[type === "departures" ? "departure" : "arrival"] || 0) -
-                         (b.flight.time.scheduled?.[type === "departures" ? "departure" : "arrival"] || 0);
-          return bDelay - aDelay; // More delayed first
-        }
-
-        return aSch - bSch;
-      });
-
           
           const row = document.createElement("tr");
           if (isDelayed) {
