@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>AIX SEC OPS - Aswin COK </title>
+      <title>AI SEC OPS - Aswin COK </title>
   <meta name="theme-color" content="#000000" />
   <link rel="manifest" href="manifest.json" />
   <style>
@@ -105,9 +105,9 @@
     <label>
       Airline Filter:
       <select id="airlineFilter">
-        <option value="IX">AIX Only</option>
+        <option value="IX">AI Only</option>
         <option value="IXAI">AIX + AI</option>
-        <option value="IXOAL" selected>AIX + OAL</option>
+        <option value="IXOAL" selected>AI + OAL</option>
       </select>
     </label>
     <label>
@@ -120,7 +120,7 @@
     </label>
   </div>
 
-  <h2>Arrivals - AIX Security-COK</h2>
+  <h2>Arrivals - AI Security-COK</h2>
   <table id="arrivals-table">
     <thead>
       <tr>
@@ -136,7 +136,7 @@
     <tbody></tbody>
   </table>
 
-  <h2>Departures - AIX Security-COK</h2>
+  <h2>Departures - AI Security-COK</h2>
   <table id="departures-table">
     <thead>
       <tr>
@@ -176,14 +176,18 @@
         return "https://cdn.brandfetch.io/idM6IAvrlf/w/820/h/248/theme/dark/logo.png?c=1dxbfHSJFAPEGdCLU4o5B";
       } else if (flightNumber.startsWith("AI")) {
         return "https://cdn.brandfetch.io/id-PSmaCm4/w/800/h/284/theme/light/logo.png?c=1dxbfHSJFAPEGdCLU4o5B";
-      } else if (flightNumber.startsWith("UL")) {
-        return "https://cdn.brandfetch.io/idZQkqhbVi/w/800/h/578/theme/dark/symbol.png?c=1dxbfHSJFAPEGdCLU4o5B";
-      } else if (flightNumber.startsWith("AK") || flightNumber.startsWith("FD")) {
-        return "https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/AirAsia_New_Logo_%282020%29.svg/768px-AirAsia_New_Logo_%282020%29.svg.png";
-      } else if (flightNumber.startsWith("FZ")) {
-        return "https://cdn.brandfetch.io/idzRsGDSFE/w/800/h/162/theme/dark/logo.png?c=1dxbfHSJFAPEGdCLU4o5B";
-      } else if (flightNumber.startsWith("J9")) {
-        return "https://cdn.brandfetch.io/idRWbgTyu0/w/800/h/248/theme/dark/logo.png?c=1dxbfHSJFAPEGdCLU4o5B";
+      } else if (flightNumber.startsWith("SQ")) {
+        return "https://cdn.brandfetch.io/idf4k686Hz/w/800/h/1091/theme/dark/symbol.png?c=1dxbfHSJFAPEGdCLU4o5B";
+      } else if (flightNumber.startsWith("MH") || flightNumber.startsWith("FD")) {
+        return "https://cdn.brandfetch.io/idWY_rcAtG/w/800/h/602/theme/dark/symbol.png?c=1dxbfHSJFAPEGdCLU4o5B";
+      } else if (flightNumber.startsWith("EK")) {
+        return "https://cdn.brandfetch.io/idItGcrKZZ/w/800/h/656/id6DT2gfn2.png?c=1dxbfHSJFAPEGdCLU4o5B";
+        } else if (flightNumber.startsWith("SV")) {
+        return "https://cdn.brandfetch.io/id_gx1nNaB/w/400/h/400/theme/dark/icon.jpeg?c=1dxbfHSJFAPEGdCLU4o5B";
+        } else if (flightNumber.startsWith("9I")) {
+        return "https://cdn.flightradar24.com/assets/airlines/logotypes/1228.png";
+      } else if (flightNumber.startsWith("GF")) {
+        return "https://cdn.brandfetch.io/id7mVly1EH/w/800/h/287/theme/dark/logo.png?c=1dxbfHSJFAPEGdCLU4o5B";
       }
       return "";
     };
@@ -209,8 +213,8 @@
 
         // Filter by airline
         let airlineMatch = false;
-        if (filterValue === "IX") {
-          airlineMatch = fn.startsWith("IX");
+        if (filterValue === "AI") {
+          airlineMatch = fn.startsWith("AI");
         } else if (filterValue === "IXAI") {
           airlineMatch = fn.startsWith("IX") || fn.startsWith("AI");
         } else {
