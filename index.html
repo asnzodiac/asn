@@ -48,9 +48,22 @@
 
     .controls {
       display: flex;
-      justify-content: flex-end;
+      justify-content: space-between;
       margin-bottom: 10px;
       gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .controls-left {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .controls-right {
+      display: flex;
+      gap: 10px;
+      align-items: center;
       flex-wrap: wrap;
     }
 
@@ -101,23 +114,29 @@
 <body>
 
   <div class="controls">
-    <button id="themeToggle">Toggle Dark Mode</button>
-    <label>
-      Airline Filter:
-      <select id="airlineFilter">
-        <option value="AI">AI Only</option>
-        <option value="IXAI">AIX + AI</option>
-        <option value="IXOAL" selected>AI + OAL</option>
-      </select>
-    </label>
-    <label>
-      Sort by:
-      <select id="sortOption">
-        <option value="scheduled" selected>STA / STD</option>
-        <option value="estimated">ETA / ETD</option>
-        <option value="delayed">Delayed First</option>
-      </select>
-    </label>
+    <div class="controls-left">
+      <button id="loadEarlierBtn">Load Earlier Flights</button>
+      <span id="loadingIndicator" style="display: none; color: var(--text-color);">Loading...</span>
+    </div>
+    <div class="controls-right">
+      <button id="themeToggle">Toggle Dark Mode</button>
+      <label>
+        Airline Filter:
+        <select id="airlineFilter">
+          <option value="AI">AI Only</option>
+          <option value="IXAI">AIX + AI</option>
+          <option value="IXOAL" selected>AI + OAL</option>
+        </select>
+      </label>
+      <label>
+        Sort by:
+        <select id="sortOption">
+          <option value="scheduled" selected>STA / STD</option>
+          <option value="estimated">ETA / ETD</option>
+          <option value="delayed">Delayed First</option>
+        </select>
+      </label>
+    </div>
   </div>
 
   <h2>Arrivals - AI Security-COK</h2>
@@ -154,10 +173,19 @@
 
   <script>
     const baseUrl = "https://api.flightradar24.com/common/v1/airport.json?code=cok";
+    
+    // Store historical flights to avoid duplicates
+    let historicalFlights = {
+      arrivals: new Set(),
+      departures: new Set()
+    };
+    
+    // Track current timestamp for pagination
+    let currentTimestamp = Math.floor(Date.now() / 1000);
 
-    const getEndpoint = (type) => {
-      const timestamp = Math.floor(Date.now() / 1000);
-      return `${baseUrl}&plugin-setting[schedule][mode]=${type}&plugin-setting[schedule][timestamp]=${timestamp}&page=1&limit=100`;
+    const getEndpoint = (type, page = 1, timestamp = null) => {
+      const ts = timestamp || Math.floor(Date.now() / 1000);
+      return `${baseUrl}&plugin-setting[schedule][mode]=${type}&plugin-setting[schedule][timestamp]=${ts}&page=${page}&limit=100`;
     };
 
     const toLocalTime = ts =>
@@ -192,7 +220,7 @@
       return "";
     };
 
-    const filterAndSortFlights = (flights, type) => {
+    const filterAndSortFlights = (flights, type, isHistorical = false) => {
       const filterValue = document.getElementById("airlineFilter").value;
       const sortOption = document.getElementById("sortOption").value;
       const now = Math.floor(Date.now() / 1000);
@@ -205,7 +233,27 @@
         const sch = type === "departures" ? f.flight.time.scheduled?.departure : f.flight.time.scheduled?.arrival;
         const act = type === "departures" ? f.flight.time.actual?.departure : f.flight.time.actual?.arrival;
 
-        // Include flights in the next 20 hours
+        // For historical flights, we're more lenient with time filtering
+        if (isHistorical) {
+          // Include flights from the past 24 hours
+          const flightTime = sch || est || now;
+          const twentyFourHoursAgo = now - (24 * 60 * 60);
+          const isWithinTimeWindow = flightTime >= twentyFourHoursAgo;
+          
+          // Filter by airline
+          let airlineMatch = false;
+          if (filterValue === "AI") {
+            airlineMatch = fn.startsWith("AI");
+          } else if (filterValue === "IXAI") {
+            airlineMatch = fn.startsWith("IX") || fn.startsWith("AI");
+          } else {
+            airlineMatch = fn.startsWith("AI") || ["SQ", "MH", "EK", "GF", "SV", "9I"].includes(airlineCode);
+          }
+          
+          return airlineMatch && isWithinTimeWindow;
+        }
+
+        // Original filtering logic for current flights
         const flightTime = sch || est || now;
         const hoursAhead = 20;
         const twentyHoursFromNow = now + (hoursAhead * 60 * 60);
@@ -221,13 +269,6 @@
           airlineMatch = fn.startsWith("AI") || ["SQ", "MH", "EK", "GF", "SV", "9I"].includes(airlineCode);
         }
         
-        // Include flights that:
-        // 1. Match airline filter AND
-        // 2. Are within our time window AND
-        // 3. Either:
-        //    a. Haven't occurred yet (act is null and sch/est is in the future)
-        //    b. Are delayed (sch is in the past but est is in the future)
-        //    c. Have completed within the last hour (act is within last hour)
         if (airlineMatch && isWithinTimeWindow) {
           // Flight hasn't departed/arrived yet
           if (!act && (est > now || sch > now)) {
@@ -288,19 +329,36 @@
       });
     };
 
-    const loadFlights = async (type) => {
+    const loadFlights = async (type, page = 1, timestamp = null, append = false) => {
       try {
-        const res = await fetch(getEndpoint(type));
+        const res = await fetch(getEndpoint(type, page, timestamp));
         const data = await res.json();
         const flights = data.result.response.airport.pluginData.schedule[type].data;
         const tbody = document.querySelector(`#${type}-table tbody`);
-        tbody.innerHTML = "";
+        
+        if (!append) {
+          tbody.innerHTML = "";
+          historicalFlights[type].clear();
+        }
 
-        const filteredFlights = filterAndSortFlights(flights, type);
+        const filteredFlights = filterAndSortFlights(flights, type, append);
         const now = Math.floor(Date.now() / 1000);
+        
+        const newRows = [];
         
         filteredFlights.forEach(f => {
           const fl = f.flight;
+          const flightId = fl.identification?.id;
+          
+          // Skip if we already have this flight (avoid duplicates)
+          if (flightId && historicalFlights[type].has(flightId)) {
+            return;
+          }
+          
+          if (flightId) {
+            historicalFlights[type].add(flightId);
+          }
+          
           const isDep = type === "departures";
           const est = isDep ? fl.time.estimated?.departure : fl.time.estimated?.arrival;
           const sch = isDep ? fl.time.scheduled?.departure : fl.time.scheduled?.arrival;
@@ -332,27 +390,100 @@
             <td>${model}</td>
             <td class="${classifyStatus(est, sch)}">${status}</td>
           `;
-          tbody.appendChild(row);
+          
+          newRows.push({ row, time: sch || est || 0 });
         });
+        
+        // If appending, we need to insert rows in the correct chronological order
+        if (append && newRows.length > 0) {
+          const existingRows = Array.from(tbody.querySelectorAll('tr'));
+          const allRows = [...newRows.map(item => item.row), ...existingRows];
+          
+          // Re-sort all rows by time
+          const rowsWithTime = allRows.map(row => {
+            const cells = row.querySelectorAll('td');
+            const staCell = cells[4]; // STA/STD column
+            const etaCell = cells[3]; // ETA/ETD column
+            
+            // Extract time from the cell text and convert to comparable format
+            const staTime = staCell?.textContent?.trim();
+            const etaTime = etaCell?.textContent?.trim();
+            
+            // Use the flight data if available, otherwise parse from display
+            let timeValue = 0;
+            if (staTime && staTime !== '-') {
+              const [hours, minutes] = staTime.split(':').map(Number);
+              timeValue = hours * 60 + minutes;
+            }
+            
+            return { row, time: timeValue };
+          });
+          
+          // Sort by time (earliest first)
+          rowsWithTime.sort((a, b) => a.time - b.time);
+          
+          // Clear and re-append all rows
+          tbody.innerHTML = '';
+          rowsWithTime.forEach(item => tbody.appendChild(item.row));
+        } else {
+          // Just append new rows normally
+          newRows.forEach(item => tbody.appendChild(item.row));
+        }
+        
       } catch (err) {
         console.error(`Error loading ${type}:`, err);
       }
     };
 
     const refreshAllFlights = () => {
+      // Reset historical data when refreshing
+      historicalFlights.arrivals.clear();
+      historicalFlights.departures.clear();
+      currentTimestamp = Math.floor(Date.now() / 1000);
+      
       loadFlights("arrivals");
       loadFlights("departures");
+    };
+
+    const loadEarlierFlights = async () => {
+      const loadingIndicator = document.getElementById("loadingIndicator");
+      const loadEarlierBtn = document.getElementById("loadEarlierBtn");
+      
+      try {
+        loadingIndicator.style.display = "inline";
+        loadEarlierBtn.disabled = true;
+        
+        // Use page=-1 to get earlier flights with current timestamp
+        await Promise.all([
+          loadFlights("arrivals", -1, currentTimestamp, true),
+          loadFlights("departures", -1, currentTimestamp, true)
+        ]);
+        
+        // Update timestamp to go further back next time
+        currentTimestamp -= (6 * 60 * 60); // Go back 6 hours for next load
+        
+      } catch (error) {
+        console.error("Error loading earlier flights:", error);
+      } finally {
+        loadingIndicator.style.display = "none";
+        loadEarlierBtn.disabled = false;
+      }
     };
 
     const themeToggle = document.getElementById("themeToggle");
     const setTheme = (theme) => {
       document.documentElement.setAttribute("data-theme", theme);
       themeToggle.textContent = theme === "dark" ? "Toggle Light Mode" : "Toggle Dark Mode";
-      localStorage.setItem("theme", theme);
+      if (typeof Storage !== "undefined") {
+        localStorage.setItem("theme", theme);
+      }
     };
 
     const initializeTheme = () => {
-      const savedTheme = localStorage.getItem("theme") || "light";
+      let savedTheme = "light";
+      if (typeof Storage !== "undefined") {
+        savedTheme = localStorage.getItem("theme") || "light";
+      }
       setTheme(savedTheme);
     };
 
@@ -363,6 +494,7 @@
 
     document.getElementById("airlineFilter").addEventListener("change", refreshAllFlights);
     document.getElementById("sortOption").addEventListener("change", refreshAllFlights);
+    document.getElementById("loadEarlierBtn").addEventListener("click", loadEarlierFlights);
 
     initializeTheme();
     refreshAllFlights();
