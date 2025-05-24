@@ -1,0 +1,21 @@
+{
+  "name": "AI SEC OPS - Aswin COK",
+  "short_name": "AI SEC OPS",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn.brandfetch.io/id-PSmaCm4/w/400/h/400/theme/dark/icon.jpeg?c=1dxbfHSJFAPEGdCLU4o5B",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdn.brandfetch.io/id-PSmaCm4/w/800/h/284/theme/light/logo.png?c=1dxbfHSJFAPEGdCLU4o5B",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
